@@ -6,7 +6,7 @@ function [ out ] = uebung_CeRe( myFileName, myDataDirectory)
 %
 %  If you dont want to write the name and path of your file by hand, you can
 %  also send no variables with the function, this way you can choose your
-%  file via UI.
+%  file via UI. 
 %% Define variables
 TITLE_XLABLE = 'x-values';
 TITLE_YLABLE = 'y-values';
