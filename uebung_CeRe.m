@@ -32,7 +32,6 @@ n_of_elements_Cell = cellfun(@numel, cell_x);
 %%  Find out for which indices seq.T does NOT match the number of elements of seq.x
 
 find_indices = find(vector_t ~= n_of_elements_Cell);
-find_indices
 
 %%  Convert seq to a cell-array using struct2cell
 
