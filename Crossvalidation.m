@@ -1,3 +1,5 @@
+function [out] = Crossvalidation()
+
 % Display prompt message in the command window
 fprintf('Enter a number between 1 and 3 for the Dataset: ');
 
@@ -30,6 +32,22 @@ end
 
 % Display the entered number
 fprintf('Your number of folds is: %d\n', numberFolds);
+
+
+% Display prompt message in the command window
+fprintf('How many repetitions do you want? ');
+
+% Read input from the user
+numberRepetitions = input('');
+
+% Check if the input is a valid number higher than 1
+while ~isnumeric(numberRepetitions) || numberRepetitions < 2 
+    fprintf('Invalid input. Please enter a number higher than 1: ');
+    numberRepetitions = input('');
+end
+
+% Display the entered number
+fprintf('The number of repetitions is: %d\n', numberRepetitions);
 
 
 %% Scenario 2: Cross validation
@@ -78,14 +96,17 @@ legend('data','linear fit','quadratic fit');
 
 %% Perform cross-validation:
 % Check what type of cross-validation is run
+typeCross = "";
 if isnumeric(numberFolds)
-    if numberFolds > N, error('Invalid crossvalidation parameter supplied: larger than number of datapoints!'), end
+    if numberFolds > N, error('Invalid crossvalidation parameter supplied: larger than number of datapoints!'),  end
     if numberFolds < 2, error('Invalid crossvalidation parameter supplied: smaller than 2, the minimum number'), end
     disp(['Performing ' num2str(numberFolds) '-fold crossvalidation'])
+    typeCross = "fold crossvalidation";
 elseif isstr(numberFolds)
     if strcmp(numberFolds, 'N')
         disp('Performing a leave-one-out cross-validation')
         numberFolds = N;
+        typeCross = "leave-one-out crossvalidation";
     else
         error('Invalid crossvalidation parameter supplied')
     end
@@ -110,46 +131,65 @@ randomIndex = randperm(length(x));
 x = x(randomIndex);
 y = y(randomIndex);
 
-for k=1:numberFolds
-   % Create the appropriate indices to select the correct number of points
-   testIndex = [1+(k-1)*stepSize:k*stepSize];
-   if k == numberFolds && remainder > 0
-       testIndex = [testIndex testIndex(end)+[1:remainder]]; 
-   end
-   trainIndex = setdiff([1:N], testIndex);
-   
-   % Select the appropriate test and training sets in x and y
-   xTrain = x(trainIndex);
-   yTrain = y(trainIndex);
-   xTest=x(testIndex);
-   yTest=y(testIndex);
-   
-   % Fit model on training-set:
-   [linearFitCoefficientsFold]=polyfit(xTrain,yTrain,1);
-   [quadraticFitCoefficientsFold]=polyfit(xTrain,yTrain,2);
+accumulatedArray1 = zeros(1, numberFolds);
+accumulatedArray2 = zeros(1, numberFolds);
 
-   % Calculate predictions on test-set:
-   yLinearTest=polyval(linearFitCoefficientsFold,xTest);
-   yQuadraticTest=polyval(quadraticFitCoefficientsFold,xTest);
+for i=1:numberRepetitions
+    for k=1:numberFolds
+       % Create the appropriate indices to select the correct number of points
+       testIndex = [1+(k-1)*stepSize:k*stepSize];
+       if k == numberFolds && remainder > 0
+           testIndex = [testIndex testIndex(end)+[1:remainder]]; 
+       end
+       trainIndex = setdiff([1:N], testIndex);
+       
+       % Select the appropriate test and training sets in x and y
+       xTrain = x(trainIndex);
+       yTrain = y(trainIndex);
+       xTest=x(testIndex);
+       yTest=y(testIndex);
+       
+       % Fit model on training-set:
+       [linearFitCoefficientsFold]=polyfit(xTrain,yTrain,1);
+       [quadraticFitCoefficientsFold]=polyfit(xTrain,yTrain,2);
     
-   % Calculate error or quality of fit or goodness of fit on test-set:
-   mseLinearFold(k)=norm(yTest-yLinearTest);
-   mseQuadraticFold(k)=norm(yTest-yQuadraticTest);
+       % Calculate predictions on test-set:
+       yLinearTest=polyval(linearFitCoefficientsFold,xTest);
+       yQuadraticTest=polyval(quadraticFitCoefficientsFold,xTest);
+        
+       % Calculate error or quality of fit or goodness of fit on test-set:
+       mseLinearFold(k)=norm(yTest-yLinearTest);
+       accumulatedArray1(k) = accumulatedArray1(k)  + mseLinearFold(k);
+       mseQuadraticFold(k)=norm(yTest-yQuadraticTest);
+       accumulatedArray2(k) = accumulatedArray2(k)  + mseQuadraticFold(k);
+    end
 end
-
+meanArray1 = accumulatedArray1 / (numberRepetitions * numberFolds);
+meanArray2 = accumulatedArray2 / (numberRepetitions * numberFolds);
 subplot(1,2,2)
-hist(mseLinearFold-mseQuadraticFold)
+hist(meanArray1-meanArray2)
 title('Linear minus quadratic MSE differences');
 
 % Calculate the average MSE as well as percent of times the simpler model (linear) had a smaller test error than the
 % more complex model (quadratic):
-averageMSElinear=mean(mseLinearFold)
-averageMSEquadratic=mean(mseQuadraticFold)
-tmp = find(mseLinearFold <= mseQuadraticFold);
+averageMSElinear=mean(meanArray1)
+averageMSEquadratic=mean(meanArray2)
+tmp = find(meanArray1 <= meanArray2);
 disp(['The linear model had a smaller test error on ' num2str(100*length(tmp)/numberFolds) '% of the ' ...
     'crossvalidation folds'])
 
+%% out:
+array.fit = linearFitCoefficients;
+array.type = typeCross;
+array.rep = numberRepetitions;
+array.averageMSElinear = meanArray1;
+array.averageMSEquadratic = meanArray2;
 
+switch nargout
+    case 1 
+        out = array;
+end
+end
 
 
 
