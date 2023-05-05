@@ -19,7 +19,7 @@ VERBOSE = 'true';                        % displays results in the console and s
 NUMBER_X_SMOOTH = 200;
 
 if nargin < 1, numberOfFolds = 10; end
-if nargin < 2, dataSet = randi(3,1); end
+if nargin < 2, dataSet = 2; end
 if nargin < 3, B = 2; end
 fileName = ['NewDemoData' num2str(dataSet)];
 if strcmp(VERBOSE, 'true')
@@ -163,8 +163,6 @@ for j = 1:B
        %fit model on training-set:
        [linearFitCoefficientsFold]=polyfit(xTrain,yTrain,1);
        [quadraticFitCoefficientsFold]=polyfit(xTrain,yTrain,2);
-       out.cv.linearParams((j-1)*numberOfFolds+k, : ) = linearFitCoefficientsFold;
-       out.cv.quadraticParams((j-1)*numberOfFolds+k, : ) = quadraticFitCoefficientsFold;
 
        %calculate predictions on test-set:
        yLinearTest=polyval(linearFitCoefficientsFold,xTest);
