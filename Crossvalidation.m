@@ -182,8 +182,8 @@ disp(['The linear model had a smaller test error on ' num2str(100*length(tmp)/nu
 array.fit = linearFitCoefficients;
 array.type = typeCross;
 array.rep = numberRepetitions;
-array.averageMSElinear = meanArray1;
-array.averageMSEquadratic = meanArray2;
+array.averageMSElinear = averageMSElinear;
+array.averageMSEquadratic = averageMSEquadratic;
 
 switch nargout
     case 1 
