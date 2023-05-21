@@ -16,10 +16,8 @@ SYMBOL = @(k) sprintf('%s', SYMBOLLIST(mod(k-1,length(SYMBOLLIST))+1));
 COLORLIST = ['r', 'b', 'g', 'm', 'c'];
 COLOR = @(k) sprintf('%s', COLORLIST(mod(k-1,length(COLORLIST))+1));
 NUMBER_X_SMOOTH = 200;
-
-
-
 %% Find File
+
 if exist(FILENAME, 'file') ~= 2
     [FILENAME, DATADIRECTORY] = uigetfile('*.mat', UI_TITLE);
     if isequal(FILENAME,0)
@@ -33,6 +31,7 @@ data = load(completeAccessPath);
 disp([UI_DISP_LOADED_FILE fullfile(completeAccessPath)]);
 
 %% Load data and fill variables
+
 structA = data.a;
 structA.path = completeAccessPath;
 
@@ -47,11 +46,9 @@ RT_2 = data_2(:, 1);
 Level_2 = data_2(:, 2);
 
 %% Plot Figure 1
-% Create a plot with different colors for each session
-figure;
 
-% Plot Figure 1
-subplot(1, 2, 1);  % Crete a subplot grid of 1 row and 2 columns, select the first subplot
+figure;
+subplot(1, 2, 1); 
 hold on;
 scatter(Level_1 - 0.15, RT_1, COLOR(1), SYMBOL(1));
 scatter(Level_2 + 0.15, RT_2, COLOR(2), SYMBOL(2));
@@ -63,7 +60,7 @@ ylabel(FIGURE_1_Y_LABEL);
 legend(date_1, date_2, 'Location', 'north');
 
 %% Plot Figure 2
-%HIER WEITERMACHEN. RMSE FÜR ZWEI LEVEL WURDEN BERECHNET
+
 xPlot = linspace(min(Level_2), max(Level_2), NUMBER_X_SMOOTH);
 
 [FitCoefficients_1] = polyfit(Level_2, RT_2, 1);
@@ -124,7 +121,7 @@ structA.rmse_3 = rmse_3;
 structA.rmse_4 = rmse_4;
 structA.rmse_5 = rmse_5;
 
-%% Create File
+%% Save File
 
 data.a = structA;
 save('ProblemSolvingExperiment_2.mat', '-struct', 'data');
@@ -139,8 +136,30 @@ save('ProblemSolvingExperiment_2.mat', '-struct', 'data');
 
 %% Add information about benefit of training to struct
 
-%% Save data
+p_values = zeros(10, 1);
 
+for difficulty = 1:10
+    session1_rt_difficulty = data_1(data_1(:, 2) == difficulty, 1);
+    session2_rt_difficulty = data_2(data_2(:, 2) == difficulty, 1);
+
+    [h,p] = ttest2(session1_rt_difficulty,session2_rt_difficulty)
+    
+    p_values(difficulty) = p;
+end
+
+significant_difficulty = find(p_values < 0.05, 1);
+
+if isempty(significant_difficulty)
+    disp('No difficulty level has a statistically significant difference.');
+else
+    disp(['The lowest difficulty level with a statistically significant difference is ', num2str(significant_difficulty)]);
+end
+
+structA.lowest_level_significant = significant_difficulty;
+
+%% Save data
+data.a = structA;
+save('ProblemSolvingExperiment_2.mat', '-struct', 'data');
 %% If user wants output -> give back output
 switch nargout
     case 1 
