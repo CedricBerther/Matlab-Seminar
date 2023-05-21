@@ -69,23 +69,27 @@ xPlot = linspace(min(Level_2), max(Level_2), NUMBER_X_SMOOTH);
 [FitCoefficients_1] = polyfit(Level_2, RT_2, 1);
 y_1 = polyval(FitCoefficients_1, Level_2);
 yPlot_1 = polyval(FitCoefficients_1, xPlot);
-A = rmse(y_1, RT_2);
-disp(A);
+rmse_1 = rmse(y_1, RT_2);
 
 [FitCoefficients_2]=polyfit(Level_2,RT_2,2);
+y_2 = polyval(FitCoefficients_2, Level_2);
 yPlot_2=polyval(FitCoefficients_2,xPlot);
+rmse_2 = rmse(y_2, RT_2);
 
 [FitCoefficients_3]=polyfit(Level_2,RT_2,3);
+y_3 = polyval(FitCoefficients_3, Level_2);
 yPlot_3=polyval(FitCoefficients_3,xPlot);
+rmse_3 = rmse(y_3, RT_2);
 
 [FitCoefficients_4]=polyfit(Level_2,RT_2,4);
+y_4 = polyval(FitCoefficients_4, Level_2);
 yPlot_4=polyval(FitCoefficients_4,xPlot);
+rmse_4 = rmse(y_4, RT_2);
 
 [FitCoefficients_5]=polyfit(Level_2,RT_2,5);
 y_5 = polyval(FitCoefficients_5, Level_2);
 yPlot_5=polyval(FitCoefficients_5,xPlot);
-B = rmse(y_5, RT_2);
-disp(B);
+rmse_5 = rmse(y_5, RT_2);
 
 subplot(1, 2, 2);  % Select the second subplot
 hold on;
@@ -100,11 +104,30 @@ hold off;
 title('Figure 2');
 xlabel(FIGURE_1_X_LABEL);
 ylabel(FIGURE_1_Y_LABEL);
-legend(date_2, 'Location', 'north');
+text(0.8, 24, sprintf('RMSE 1: %.2f', rmse_1), 'FontSize', 10, 'FontWeight', 'bold');
+text(0.8, 22, sprintf('RMSE 2: %.2f', rmse_2), 'FontSize', 10, 'FontWeight', 'bold');
+text(0.8, 20, sprintf('RMSE 3: %.2f', rmse_3), 'FontSize', 10, 'FontWeight', 'bold');
+text(0.8, 18, sprintf('RMSE 4: %.2f', rmse_4), 'FontSize', 10, 'FontWeight', 'bold');
+text(0.8, 16, sprintf('RMSE 5: %.2f', rmse_5), 'FontSize', 10, 'FontWeight', 'bold');
 
 %% Add parameters to struct
 
+structA.parameter_fit_1 = y_1;
+structA.parameter_fit_2 = y_2;
+structA.parameter_fit_3 = y_3;
+structA.parameter_fit_4 = y_4;
+structA.parameter_fit_5 = y_5;
+
+structA.rmse_1 = rmse_1;
+structA.rmse_2 = rmse_2;
+structA.rmse_3 = rmse_3;
+structA.rmse_4 = rmse_4;
+structA.rmse_5 = rmse_5;
+
 %% Create File
+
+data.a = structA;
+save('ProblemSolvingExperiment_2.mat', '-struct', 'data');
 
 %% Leave-one-out cross-validation
 
