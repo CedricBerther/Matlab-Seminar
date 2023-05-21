@@ -134,6 +134,46 @@ save('ProblemSolvingExperiment_2.mat', '-struct', 'data');
 
 %% Non-parametric bootstrap test 
 
+    session1_rt_difficulty_1 = data_1(data_1(:, 2) == 1, 1);
+    session2_rt_difficulty_1 = data_2(data_2(:, 2) == 1, 1);
+
+    session1_rt_difficulty_10 = data_1(data_1(:, 2) == 10, 1);
+    session2_rt_difficulty_10 = data_2(data_2(:, 2) == 10, 1);
+
+    N=numel(session1_rt_difficulty_10);
+    numBootstraps = 5000; 
+    bootstrapMeans = zeros(numBootstraps, 1);
+    
+    for i = 1:numBootstraps
+        bootstrapIndex=randi(N,N,1);
+
+        xbootstrapped=session1_rt_difficulty_10(bootstrapIndex);
+        ybootstrapped=session2_rt_difficulty_10(bootstrapIndex);
+    
+        bootstrapMeans(i) = mean(ybootstrapped) - mean(xbootstrapped);
+
+    end
+
+    confidence_level = 0.95;  % Confidence level
+    lower_percentile = (1 - confidence_level) / 2;
+    upper_percentile = 1 - lower_percentile;
+
+    bootstrap_mean_diff_sorted = sort(bootstrapMeans);
+    lower_bound = bootstrap_mean_diff_sorted(round(lower_percentile * numBootstraps));
+    upper_bound = bootstrap_mean_diff_sorted(round(upper_percentile * numBootstraps));
+
+    if lower_bound <= 0 && upper_bound >= 0
+        disp('The 95% confidence interval contains zero for task difficulty 1.');
+    else
+        disp('The 95% confidence interval does not contain zero for task difficulty 1.');
+    end
+    
+    if lower_bound <= 0 && upper_bound >= 0
+        disp('The 95% confidence interval contains zero for task difficulty 10.');
+    else
+        disp('The 95% confidence interval does not contain zero for task difficulty 10.');
+    end
+
 %% Add information about benefit of training to struct
 
 p_values = zeros(10, 1);
