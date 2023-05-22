@@ -16,6 +16,7 @@ SYMBOL = @(k) sprintf('%s', SYMBOLLIST(mod(k-1,length(SYMBOLLIST))+1));
 COLORLIST = ['r', 'b', 'g', 'm', 'c'];
 COLOR = @(k) sprintf('%s', COLORLIST(mod(k-1,length(COLORLIST))+1));
 NUMBER_X_SMOOTH = 200;
+NUMBER_FOLDS = 10;
 %% Find File
 
 if exist(FILENAME, 'file') ~= 2
@@ -128,8 +129,63 @@ save('ProblemSolvingExperiment_2.mat', '-struct', 'data');
 
 %% Leave-one-out cross-validation
 
-%% Add information to struct
+% Important: randomize the data once before starting the crossvalidation loop; shuffle both x and y data using the same
+% randomisation!
 
+N = numel(RT_2);
+stepSize = floor(N/NUMBER_FOLDS);
+remainder = rem(N, NUMBER_FOLDS);
+
+rmsea = zeros(1, 5);
+
+for j = 1:5
+    % important: randomize the data once before starting the crossvalidation
+    % loop on very of the B iterations;
+    % Shuffle both x and y data using the same randomisation as the data
+    % comes in pairs!
+    randomIndex = randperm(length(RT_2));
+    x_2 = RT_2(randomIndex);
+    y_2 = Level_2(randomIndex);
+    
+    for k = 1:NUMBER_FOLDS
+        % create the appropriate indices to select the correct number of
+        % points.
+        testIndex = [1 + (k-1) * stepSize:k * stepSize];
+        % In case there is a remainder, i.e. the test- and training set
+        % sizes in the last fold are different, we have to add the remainder
+        % indices to the testIndex:
+        if k == NUMBER_FOLDS && remainder > 0
+            testIndex = [testIndex testIndex(end) + [1:remainder]]; 
+        end
+        trainIndex = setdiff([1:N], testIndex);
+
+        % select the appropriate test and training sets in x and y
+        xTrain = x_2(trainIndex);
+        yTrain = y_2(trainIndex);
+        xTest = x_2(testIndex);
+        yTest = y_2(testIndex);
+
+        % fit model on training-set:
+        [linearFitCoefficientsFold] = polyfit(xTrain, yTrain, j);
+        yLinearTest = polyval(linearFitCoefficientsFold, xTest);
+
+        % calculate RMSEA on test-set
+        linearRMSEA(j, k) = sqrt(mean((yTest - yLinearTest).^2));
+    end
+
+    % average RMSEA:
+    averageLinearRMSEA(j) = mean(linearRMSEA(j, :));
+
+    % store the RMSEA values for each polynomial degree
+    rmsea(j) = averageLinearRMSEA(j);
+end
+
+% find the polynomial degree with the lowest average RMSEA
+[~, bestPolynomial] = min(rmsea);
+
+
+%% Add information to struct
+structA.bestPolynomial = bestPolynomial;
 %% Plot Figure 3
 
 %% Non-parametric bootstrap test 
